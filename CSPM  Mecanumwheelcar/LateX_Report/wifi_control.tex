@@ -1,0 +1,101 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{pifont}  % For special symbols like arrows
+\usepackage{enumitem}  % For customizing lists
+
+% Define colors for code blocks
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegray},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\begin{document}
+
+\section{WiFi Control System for Mecanum Wheel Car}
+
+In this project, a WiFi-based control system for the mecanum wheel car was implemented using the ESP32 microcontroller. The intention was to use UDP communication to enable remote control of the vehicle's movements and to report on its status. The three key steps of the control mechanism were:
+\begin{itemize}
+    \item Setting up the WiFi Access Point (AP),
+    \item Receiving and processing UDP movement commands,
+    \item Updating the controlling device with real-time status information.
+\end{itemize}
+
+\subsection{WiFi Access Point Setup}
+
+The ESP32 was set up to function as a WiFi Access Point (AP), eliminating the need for an external network and enabling direct connection between the vehicle and a controlling device (such as a computer or smartphone). Establishing a local communication network in settings without internet connectivity required this configuration.
+
+The ESP32 broadcasts the AP with a pre-configured SSID and password when it first powers up. Additionally, the subnet, gateway, and Static IP address are configured, which enable devices to connect with the car using this network. When the AP is turned on, the ESP32 starts to wait for incoming UDP packets on two ports (port no: 4444 for commands and 4445 for status updates).
+
+\subsection{UDP Control and Command Processing}
+
+The car receives, decodes, and executes movement commands via UDP connection, which forms the basis of the control system. The commands are short strings that are interpreted and utilized to set the speed and direction of the car's motors.
+
+\subsubsection{Command Logic}
+
+\begin{enumerate}
+    \item \textbf{"rc" (Remote Control Command)}:\\
+    The "rc" command is the primary command used to control the movement of the car. It includes three parameters (\texttt{x}, \texttt{y}, and \texttt{z}) that represent the movement of the car in three separate axes:
+    \begin{itemize}
+        \item \texttt{x}: Forward/backward movement
+        \item \texttt{y}: Left/right movement
+        \item \texttt{z}: Rotation
+    \end{itemize}
+
+    First, the logic checks if the values of \texttt{x}, \texttt{y}, and \texttt{z} are within the permissible range of -127 to 127. These intervals are selected to illustrate the direction and intensity of movement along each axis.
+    
+    If the values are valid, they are assigned to the \texttt{move\_dir} array, which directly controls the car's motors. The car then moves based on the given inputs. 
+    
+    Utilizing \texttt{sscanf()} ensures accurate parsing of the command string, retrieving the three values (\texttt{x}, \texttt{y}, and \texttt{z}) for execution.
+
+    \item \textbf{"stop" Command}:\\
+    The car will stop right away when you provide this command. It essentially stops the motors by setting all movement directions (\texttt{x}, \texttt{y}, \texttt{z}) to zero. The controlling device receives a confirmation answer ("ok") after processing the stop command.
+
+    \item \textbf{"keepalive" Command}:\\
+    To keep the connection between the controlling device and the vehicle active, the "keepalive" command is essential. Every time it receives one, it changes a \texttt{lastKeepaliveTime}  variable with the current time.
+    
+    As a backup in case of a broken connection, the system automatically stops the car to prevent uncontrollable movement if no "keepalive" signal is received after a certain interval (such as 10 seconds).
+
+
+\end{enumerate}
+
+These commands provide the vehicle the necessary controls to move, stop, and maintain connection, ensuring reliable and safe operation.
+
+\subsection{Status Reporting}
+
+The ESP32 not only receives commands but also periodically updates the controlling device on the car's status. These updates include critical information such as:
+\begin{itemize}
+    \item \textbf{Battery Voltage}: The current voltage level of the car’s battery.
+    \item \textbf{Battery Percentage}: The remaining charge of the battery as a percentage.
+    \item \textbf{Motor Speeds}: The speeds of all four motors are monitored and reported as part of the status update.
+\end{itemize}
+
+The status is sent every second to keep the controlling device informed about the condition of the car. This allows the operator to monitor the car’s performance in real-time and take appropriate action, such as stopping the car if the battery is low.
+
+\subsection{Timeout and Safety Mechanism}
+
+A critical aspect of the system is its built-in safety mechanism. The car will automatically stop if the "keepalive" command is not received for an extended period (10 seconds in this case). This ensures that the car will not continue moving uncontrollably in the event of a communication failure. The system continuously monitors the time since the last valid command was received, and if the timeout is exceeded, the motors are stopped, and a warning message is generated.
+
+\end{document}

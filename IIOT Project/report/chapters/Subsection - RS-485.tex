@@ -1,0 +1,58 @@
+\documentclass{article}
+\usepackage{graphicx}
+
+\begin{document}
+	
+	\section{Communication Medium}
+	
+	\subsection{RS-485}
+	
+	RS-485 was created by the Telecommunications Industry Association and Electronic Industries Alliance (TIA/EIA) to overcome the disadvantages of the RS-232 serial communication device. It is used in two-wire data transfer. Via RS-485 serial communication protocol, the master can communicate up to 32 devices via a wire bus connection as shown in the diagram.
+	\\In the OSI communication model, it lies on the first layer at the physical layer. It creates the electrical specifications for transmitting and receiving data.
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.6\textwidth]{"C:/Users/axitk/OneDrive/Desktop/THM Document/IOT Project/Report/Image/RS-485 Master Slave Connection"}
+		\caption{RS485 Master-Slave Connection}
+		\small Source:  https://www.advantech.com/en/resources/white-papers/02cb2f4e-4fb2-4a87-be3b-508325bd61d6
+	\end{figure}
+	
+	The signal transmission of RS-485 is mentioned in the below image. Data transfer will start from High to low pulse (Mark) and then followed by 8 bits of data and then as per the configuration, it will use odd parity or even parity. At last low to high pulse (Space) for ending the data transmission.
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.6\textwidth]{"C:/Users/axitk/OneDrive/Desktop/THM Document/IOT Project/Report/Image/Signal characteristics of data transmission"}
+		\caption{Signal Characteristic of Data Transmission}
+		\small Source:  https://en.wikipedia.org/wiki/RS-485
+	\end{figure}
+	
+	\subsubsection{UART}
+	
+	A Universal Asynchronous Receiver-Transmitter (UART) is a protocol for asynchronous serial communication in which the data format and transmission speeds are configurable. It sends data bits one by one, from the least significant to the most significant, framed by start and stop bits so that precise timing is handled by the communication channel. 
+	\newline The electric signaling levels are handled by a driver circuit external to the UART. Common signal levels are RS-232, RS-485, and raw TTL for short debugging links.In the OSI communication model, it lies on the second layer data link layer. Communication is possible in all three modes.
+	\begin{enumerate}
+		\item Simplex (in one direction only, with no provision for the receiving device to send information back to the transmitting device)
+		\item Full Duplex (both devices send and receive at the same time)
+		\item Half-Duplex (devices take turns transmitting and receiving)
+	\end{enumerate}
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.6\textwidth]{"C:/Users/axitk/OneDrive/Desktop/THM Document/IOT Project/Report/Image/UART Data Frame Structure"}
+		\caption{Data Frame Structure for Transmission}
+		\small Source:  https://en.wikipedia.org/wiki/Universal-asynchronous-receiver-transmitter
+	\end{figure}
+	
+	Details regarding the UART Frame structure:
+	\begin{enumerate}
+		\item Idle (logic high (1))
+		\item Start bit (logic low (0)): The start bit signals to the receiver that a new character is coming.
+		\item Data bits: The next five to nine bits, depending on the code set employed, represent the character.
+		\item Parity bit: The parity bit is a way for the receiving UART to tell if any data has changed during transmission.
+		\item Stop (logic high (1)): They signal to the receiver that the character is complete.
+	\end{enumerate}
+	
+	\subsubsection{UART to RS-485 Conversion}
+	
+	In situations when noise immunity or long-distance communication is necessary, UART and RS-485 are frequently used in tandem. In contrast to conventional UART communication, a physical layer that facilitates communication over greater distances can be implemented using the RS-485 hardware (transceivers). In industrial applications and situations where devices must communicate over longer distances or in loud surroundings, the combination of UART and RS-485 is frequently utilized.In this project, we are using the hardware module (UART-TTL to RS485 Converter Module) which is used to convert the UART TTL signal to the RS-485 signal.
+	
+\end{document}

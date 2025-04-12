@@ -1,0 +1,97 @@
+\subsection{Software (Server side)}
+	On the server side of this project a flexible and secure approach was picked to deploy several services in an easy manner. To fullfill these conditions we make use of containerization using \texttt{Docker}.\\ Within \texttt{Docker} a container is an isoleted environment for running code. The container has no knowledge of the operating system or the filesystem. A container includes everything needed for the containerized application to run, including all library dependencies and the base operating system~\cite{docker-gstarted}.\\
+	The docker daemon\footnote{Managing background process for docker containers} was deployed on a \texttt{Debian 6.1} virtual server provided by the THM. At the beginning of this project only SSH-Access to this server was available. The setup of the \texttt{Docker} daemon and \texttt{Portainer}\footnote{Webinterface for managing a docker installation} was done together with IIOT-Team1 and Professor Mink. The following subsection describes briefly how this was accomplished.
+	
+	\subsubsection{Docker and Portainer setup}
+		The enumeration outlines the basic installation and setup process:
+		\begin{enumerate}
+			\item Upgrade software on the server to the lates releases
+			\item Installation of docker daemon according to the official instructions~\cite{docker-install}
+			\item Join ssh-user into docker group (rootless control of Docker daemon)
+			\item Deploy the \texttt{Portainer} container
+			\item Configure basic Portainer settings\footnote{It's best-practice to disable bind-mounts in portainer so that Portainer users cannot mount and access the root directory within a container}
+			\item Create user accounts for team members
+		\end{enumerate}
+		
+		This setup provides options to easily deploy docker containers for all team-members without having ssh access onto the server. Portainer also adds user managment ontop of the Docker daemon. Thus simple accounting rules can be applied on the different users so their usable ressources on the server can be limited. 
+		
+	\subsubsection{Esphome deployment}
+	\label{sec:esphome-container}
+		This section explains the deployment of an esphome server used to configure and build the firmware for the hardware described in \cref{sec:hardware-suggestion}. Esphome was deployed using \texttt{docker compose}. Docker compose is a kind of wrapper for the docker command line interface. In general you define a \enquote{stack} in the \ac{yaml} file format where you configure all containers, which ports to expose and which volumes/directories to mount into the container. Such a yaml file was set-up within the portainer webinterface containing the following configuration:
+		
+		%TODO: fix yaml appearence in listings
+		\begin{lstlisting}[tabsize=2, gobble=4, caption={docker-compose.yml configuration for esphome container}, label=lst:esphome]
+		esphome:
+			image: esphome/esphome
+			container_name: esphome
+			restart: unless-stopped
+			ports:
+				- "20000:6052" # Web dashboard
+			networks:
+				- dev-net
+			volumes:
+				- team4-esphome_team4_esphome_conf:/config
+			environment:
+				USERNAME: "admin"
+				PASSWORD: "iotlab2023team4"
+				ESPHOME_DASHBOARD_USE_PING: true
+		volumes:
+			team4-esphome_team4_esphome_conf:
+			external: true
+		\end{lstlisting}
+		
+		In this configuration file a new container with the name \enquote{esphome} is deployed. The virtual docker volume \enquote{team4-esphome\_team4\_esphome\_conf} is mounted according to the esphome documentation within the container under the path \enquote{/config}. The default esphome port \texttt{6052} is exposed as port \texttt{20000} to not overlap with ports assigned to team 1.\\
+		After deploying that container this way the web interface of esphome was available under the given port. From that web interface our team was able to deploy and build the yaml-based configuration for the device and also flash it onto the device via the \ac{OTA} update feature. The configuration itself is explained in detail in \cref{sec:software}. Of special interest is the environment variable \texttt{ESPHOME\_DASHBOARD\_USE\_PING}. This enables the dashboard to discover the esphome device's online status by using ping and not \ac{mDNS}. This configuration change is essential because \ac{mDNS} would not work in the THM network.
+		
+	\subsubsection{Node-Red Grafana and Influxdb}
+	
+	\subsubsection{Telegraf}
+		Telegraf is a sofware developed by Influxdb and has the main task to scrape data from via different souce plugins and push them into an influxdb instance. This tool is highly integrated with influxdb, thus configuration for a telegraf process cand be directly generated from an influxdb. In the influxdb's web interface you can add a new \enquote{Telegraf} as data source. Then a configuration editor pops up, where the previously deployed \ac{MQTT}-server was configured. The retreived data is published in a single \ac{MQTT} topic in a \ac{JSON} encoded string. Thus the telegraf configuration was set-up so that it parses the \ac{JSON} string and stores all time series data correctly in the influxdb.\\
+		The next step consisted of deploying the telegraf instance with docker. \cref{lst:telegraf} shows the configuration. The telegraf agent in the container is started with the environment variable \texttt{INFLUX\_TOKEN} set to the access token provided by the influxdb telegraf integration and the base docker command is appended with the \texttt{--config} option and the url provided by the integration that serves the configuration file. Thus the configuration could be edited dynamically in the influxdb webinterface and the telegraf container re-fetches the configuration on each startup. This way we save ourselves to provide static configuration files for telegraf.
+		
+		\begin{lstlisting}[tabsize=2, gobble=4, caption={docker-compose.yml configuration for telegraf}, label=lst:telegraf]
+		telegraf1:
+			image: telegraf
+			container_name: telegraf1
+			restart: unless-stopped
+			networks:
+				- dev-net
+			environment:
+				INFLUX_TOKEN: "boY1r6bdGmwU00Sou-f-VrFuh4zlQovnLbRDaqRQyZNkybBSSg9nwRAlQBL9LlLFr8qNUmdt5dLQAF6IgmouXw=="
+			command: "--config http://influxdb:8086/api/v2/telegrafs/0c4903c473f8e000"
+		\end{lstlisting}
+		
+		The configuration for the telegraf agent available under the url in \cref{lst:telegraf} in the last line is summarized in the following listing:
+		
+		\begin{lstlisting}[tabsize=2, gobble=4, caption={Telegraf configuration}, label=lst:telegraf-cfg]
+		[agent]
+		interval = "10s"
+		round_interval = true		
+
+		[[outputs.influxdb_v2]]
+			urls = ["http://mt-labor.iem.thm.de:20002"]
+			token = "$INFLUX_TOKEN"
+			organization = "iot-team4"
+			bucket = "iot-data-telegraf"
+		
+		[[inputs.mqtt_consumer]]
+			servers = ["ssl://emqx:8883"]
+		
+			topics = [
+				"/IoT/combined"
+			]
+		
+			client_id = "telegraf-scraper"
+		
+			username = "admin"
+			password = "iotlab2023team4"
+		
+			insecure_skip_verify = true
+		
+
+			data_format = "json"
+			json_time_key = "_ts"
+			json_time_format = "unix"		
+		\end{lstlisting}
+		
+		As you can see in \cref{lst:telegraf-cfg} the telegraf agent is configured to write data to the database each $ 10~\si{\second} $ and to round the collected data within this interval. The section \texttt{outputs.influxdb\_v2} configures the connection to the indluxdb running within the docker stack. The section labelled \texttt{inputs.mqtt\_consumer} describes the connection to the \ac{MQTT} broker. It was configured to listen only to the json encoded topic \texttt{/IoT/combined}. \texttt{insecure\_skip\_verify} skips the certificate check\footnote{Telegraf still uses an ssl encrypted connection to the broker. Only the CA check is skipped. This saved a bit work to import the CA certificate into the docker container. For true authenticity this should be made up later.}. Of special interest is the option \texttt{json\_time\_key} that defines a \ac{JSON} key in the object received at the provided topic that holds the timestamp to write to the influxdb. \textbf{By using this option the timestamp is not appended when writing to the influxdb, but rather originate from the hardware interface board itself.}

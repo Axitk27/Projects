@@ -1,0 +1,144 @@
+% Define warnings for hbox
+\hfuzz=5pt
+
+% Program English bibliography strings
+\DefineBibliographyStrings{english}{
+	andothers   = \mkbibemph{et al\adddot},
+	url         = [Online]\adddot\addspace Available under,
+	urlseen	= {Accessed on:},
+}
+
+% Remove empty braces from Online bibtex entries without date
+\xpatchbibdriver{online}
+{\printtext[parens]{\usebibmacro{date}}}
+{\iffieldundef{year}
+	{}
+	{\printtext[parens]{\usebibmacro{date}}}}
+{}
+{\typeout{There was an error patching biblatex-ieee (specifically, ieee.bbx's @online driver)}}
+
+% Add command for captioning equations
+\newcounter{equationset}
+\newcommand{\equationset}[1]{% \equationset{<caption>}
+	\refstepcounter{equationset}% Step counter
+	\noindent\makebox[\linewidth]{Equation~\theequationset: #1}}% Print caption
+
+% Arabic section numbering
+\renewcommand\thesection{\arabic{section}}
+
+% Enable section numbering to depth 3 (=\subsubsection)
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\sffamily
+
+% Enable figure/table/equation numbering per section
+\counterwithin{figure}{section}
+\counterwithin{table}{section}
+\counterwithin{equation}{section}
+
+% Set headers for titlepage
+\fancypagestyle{titlepage}{
+	\fancyhf{}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\footrulewidth}{0pt}
+	\fancyhead[L]{\includegraphics[width=0.6\linewidth]{assets/thm-logo}}
+}
+
+% Set headers for contents
+\fancypagestyle{thesishead}{
+	\fancyhf{}
+	\fancyhead[L]{\leftmark}
+	\fancyhead[R]{\thepage}
+	\fancyfoot[C]{\thepage}
+}
+
+% Set style for basic listings
+\definecolor{solarized@base03}{HTML}{002B36}
+\definecolor{solarized@base02}{HTML}{073642}
+\definecolor{solarized@base01}{HTML}{586e75}
+\definecolor{solarized@base00}{HTML}{657b83}
+\definecolor{solarized@base0}{HTML}{839496}
+\definecolor{solarized@base1}{HTML}{93a1a1}
+\definecolor{solarized@base2}{HTML}{EEE8D5}
+\definecolor{solarized@base3}{HTML}{FDF6E3}
+\definecolor{solarized@yellow}{HTML}{B58900}
+\definecolor{solarized@orange}{HTML}{CB4B16}
+\definecolor{solarized@red}{HTML}{DC322F}
+\definecolor{solarized@magenta}{HTML}{D33682}
+\definecolor{solarized@violet}{HTML}{6C71C4}
+\definecolor{solarized@blue}{HTML}{268BD2}
+\definecolor{solarized@cyan}{HTML}{2AA198}
+\definecolor{solarized@green}{HTML}{859900}
+
+\setmonofont{Hack}[
+Extension        = .ttf, 
+Path                  = /usr/share/fonts/TTF/,
+UprightFont    = *-Regular,
+ItalicFont         = *-Italic,
+BoldFont          = *-Bold,
+BoldItalicFont  = *-BoldItalic,
+Scale                  = 0.8,] 
+
+\setsansfont{NotoSans}[
+Extension        = .ttf,
+Path                  = /usr/share/fonts/noto/,
+UprightFont    = *-Regular,
+ItalicFont         = *-Italic,
+BoldFont          = *-Bold,
+BoldItalicFont  = *-BoldItalic,
+Scale                  = 0.8,]
+
+\lstset{
+	basicstyle=\footnotesize\ttfamily,
+	numbers=left,
+	numberstyle=\tiny,
+	numbersep=5pt,
+	tabsize=2,
+	extendedchars=true,
+	breaklines=true,
+	keywordstyle=\color{red},
+	frame=b,
+	stringstyle=\color{white}\ttfamily,
+	showspaces=false,
+	showtabs=false,
+	xleftmargin=17pt,
+	framexleftmargin=17pt,
+	framexrightmargin=5pt,
+	framexbottommargin=4pt,
+	%backgroundcolor=\color{lightgray},
+	showstringspaces=false,
+	numberstyle=\color{solarized@green},
+	keywordstyle=\color{solarized@magenta},
+	stringstyle=\color{solarized@cyan}\ttfamily,
+	identifierstyle=\color{solarized@blue},
+	commentstyle=\color{solarized@violet},
+	emphstyle=\color{solarized@red},
+	rulecolor=\color{solarized@base2},
+	rulesepcolor=\color{solarized@base2}
+}
+
+%Load listings langauges
+\lstloadlanguages{
+	python
+}
+
+
+%Modify listings captions
+\usepackage{caption}
+\DeclareCaptionFont{white}{\color{white}}
+\DeclareCaptionFormat{listing}{\colorbox[cmyk]{0.43, 0.35, 0.35,0.01}{\parbox{\textwidth}{\hspace{15pt}#1#2#3}}}
+\captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white, singlelinecheck=false, margin=0pt, font={bf,footnotesize}}
+
+% Disable auto indenting after paragraph
+\setlength\parindent{0pt}
+
+% Set correct names for appendix package
+\renewcommand{\appendixname}{Appendix}
+\renewcommand{\appendixtocname}{Appendix}
+\renewcommand{\appendixpagename}{Appendix}
+
+% Configure locale for siunit
+\sisetup{locale=DE}
+
+% Configure bit unit to always be uppercase
+\DeclareSIUnit[]{\bit}{Bit}

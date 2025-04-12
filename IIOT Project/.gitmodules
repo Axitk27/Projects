@@ -1,0 +1,3 @@
+[submodule "libmodbus-demo/third-party/libmodbus"]
+	path = demos/libmodbus-demo/third-party/libmodbus
+	url = https://github.com/stephane/libmodbus.git

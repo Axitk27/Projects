@@ -1,0 +1,87 @@
+\subsection{Software suggestion}
+\label{sec:software}
+%TODO: link section to esphome in first sentence
+	This section contains a basic explanation which software/firmware was chosen for operating the ESP32-GATEWAY board described in \cref{sec:hardware-suggestion}. Thus this section contains the basic configuration used to do \ac{OTA} updates and configuration provisioning.\\
+	
+	For building and installing the esphome firmware, an esphome server must have been set up in a containerized environment. This procedure is described in \cref{sec:esphome-container}.  The following listing contains the basic configuration in the \ac{yaml} format that was used to build the esphome firmware for the device. It configures ota-updates and the basic connection to the \ac{MQTT} server. Some parts of the configuration were left out because they are not relevant in this scope. The second listing provides the configuration for a single modbus register as an example. All other registers were configured in the same scheme. 
+	
+	\subsubsection{General configuration}
+		\begin{lstlisting}[tabsize=2, gobble=4, caption={Basic esphome configuration}, label=lst:esphome-basic]
+		esphome:
+			name: $dev_name
+			friendly_name: $dev_name
+		
+		esp32:
+			board: esp32-gateway
+			framework:
+				type: esp-idf
+		
+		ethernet:
+			type: LAN8720
+			mdc_pin: GPIO23
+			mdio_pin: GPIO18
+			clk_mode: GPIO17_OUT
+			phy_addr: 0
+			use_address: $current_ip 
+	
+		ota:
+			password: "82c8244b10a089f5f56db37378ed616c"
+		
+		web_server:
+			port: 80
+			auth:
+				username: $auth_username
+				password: $auth_password
+
+		time:
+			- platform: sntp
+				id: sntp_time
+				timezone: Europe/Berlin
+				servers: $ntp_server
+		
+
+		text_sensor:
+			- platform: ethernet_info
+				ip_address:
+				name: "IP-Address"
+	
+		mqtt:
+			broker: $mqtt_broker
+			port: $mqtt_port
+			username: $mqtt_auth_username
+			password: $mqtt_auth_password
+			client_id: $dev_name
+			topic_prefix: "/IoT"
+			log_topic: "/system/log"
+			keepalive:
+				seconds: 5
+			skip_cert_cn_check: False
+			idf_send_async: False
+			certificate_authority: |
+		-----BEGIN CERTIFICATE-----
+		<PLAINTEXT CERTIFICATE REMOVED FOR BETTER READIBILITY>
+		-----END CERTIFICATE-----
+		
+		
+		uart:
+			id: modbus_ua
+			tx_pin: 4
+			rx_pin: 13
+			baud_rate: $mb_baudrate
+			data_bits: 8
+			stop_bits: 1
+			parity: NONE
+		
+		modbus:
+			id: modbus0
+			uart_id: modbus_ua
+			send_wait_time: 250ms
+			disable_crc: False
+		
+		modbus_controller:
+			-	id: deif_mic2
+				address: $mb_slave
+				modbus_id: modbus0
+				update_interval: $update_interval
+				command_throttle: 0ms
+		\end{lstlisting}

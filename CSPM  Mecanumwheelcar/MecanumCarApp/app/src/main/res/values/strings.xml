@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Mecanum Wheel Car WiFi Control</string>
+    <string name="status_port">Status Port</string>
+    <string name="car_port">Car Port</string>
+    <string name="car_ip_address">Car IP Address</string>
+    <string name="save">Save</string>
+    <string name="exit">Exit</string>
+</resources>

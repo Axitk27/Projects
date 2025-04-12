@@ -1,0 +1,38 @@
+
+	{\Large \textbf{Mecanum Car Commands}}\\
+	Use Wi-Fi to establish a connection between the Mecanum Car and a client device.\\
+	\begin{tcolorbox}[width=\linewidth, sharp corners=all, colback=white!95!black, boxrule=0pt]
+		{\large \textbf{Send Command \& Receive Response}}
+	\end{tcolorbox}
+	Mecanum Car IP: \textbf{192.168.10.1} UDP Command Port: \textbf{4444} UDP Status Port: \textbf{4445}
+	
+	\begin{tabular}{R{0.1\textwidth} L{0.85\textwidth}}
+		Step 1:\newline \phantom{-} & Set up a UDP client on the client device to send and receive messages from the Mecanum Car via the same port. \\
+		Step 2:\newline \phantom{-} & Send any available command to the Mecanum Car to control it. \\
+	\end{tabular}
+	
+	\begin{tcolorbox}[width=\linewidth, sharp corners=all, colback=white!95!black, boxrule=0pt]
+		{\large \textbf{Control Commands}}
+	\end{tcolorbox}
+	\begin{tabularx}{\textwidth}{c|c|c}
+		\hline
+		\textbf{Command} & \textbf{Description} & \textbf{Possible Response} \\
+		\hline
+		rc x y z & \makecell{Apply speed to  x y or z direction.\\x (backward - forward) = -127 to 127\\y (left - right) = -127 to 127\\z (rotation ccw - cw) = -127 to 127} & -/error \\
+		\hline
+		keepalive & \makecell{Keeps connection to Mecanum Car alive.\\Prevents timeout without changing last command.} & ok/error \\
+		\hline
+		stop & \makecell{Set all directions to 0.} & ok/error \\
+		\hline
+	\end{tabularx}
+	\\
+	\begin{tcolorbox}[width=\linewidth, sharp corners=all, colback=white!95!black, boxrule=0pt]
+		{\large \textbf{Status Message | Data Type: String}}
+	\end{tcolorbox}
+	\textbf{Data string received every second while controlling via WiFi}\\
+	"batV:\%.2f,batP:\%d,mA:\%d,mB:\%d,mC:\%d,mD:\%d,:\textbackslash n"\\
+	\\
+	\textbf{Description}\\
+	"batV" = Measured voltage of battery in Volt\\
+	"batP" = Charge of battery in Percent\\
+	"mX" = Duty cycle of motor X in Percent\\

@@ -1,0 +1,98 @@
+\documentclass{article}
+
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{enumitem}
+
+\geometry{a4paper, margin=1in}
+
+\begin{document}
+	
+	
+	\section{ESP-Home}
+	\subsection{Introduction to ESP-Home}
+	
+	Modern life is now completely dependent on smart home automation, which provides ease, improved security, and energy efficiency. Within the domain of open-source smart home systems, ESPHome is a platform designed to simplify and optimize do-it-yourself home automation projects. ESPHome, which was first developed as a component of Home Assistant, is now well-known for its user-friendly interface and seamless device connectivity. The ESP-32 device could be flashed using a variety of methods, including Platform-IO, ESP-Home, Arduino-IDE, etc. Consider your application and the problem you wish to address before choosing which platform to use.
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.6\textwidth]{"C:/Users/axitk/OneDrive/Desktop/THM Document/IOT Project/Report/Image/ESPHome"}
+		\caption{ESPHome}
+		\small Source: https://esphome.io/
+	\end{figure}
+	
+	\subsubsection{Advantages of using ESP-Home:}
+	\begin{enumerate}
+		\item ESPHome is intended to integrate easily with the ESP8266 and ESP32 microcontrollers, which are popular among makers because of their low cost, low power consumption, and integrated Wi-Fi.
+		\item ESPHome uses YAML configuration files, which is one of its unique characteristics. They offer a great level of flexibility and customization by defining devices, automation rules, and integrations.
+		\item ESPHome is compatible with several protocols for communication, such as MQTT and API-based exchanges. This allows devices and platforms from various smart homes to work together.
+		\item By enabling users to configure sensors, actuators, and other components using an easy-to-understand configuration language, ESPHome streamlines the device management process.
+		\item ESPHome easily interfaces with the well-liked open-source home automation platform as a part of the Home Assistant ecosystem. Through the provision of a single interface for controlling all linked devices, this integration improves the entire smart home experience.
+	\end{enumerate}
+	
+	\subsubsection{Getting Started with ESPHome}
+	If you want to create custom firmware for your ESP8266/ESP32 devices, ESPHome is also the possible answer. We'll walk over how to quickly and easily set up a basic "node". The ESPHome may be used in a variety of ways. Some of the services are as follows:
+	\begin{enumerate}[label=(\arabic*)]
+		\item From Home Assistant
+		\item Using the command line
+		\item Migrating from Tasmota
+		\item Using the Docker Container
+	\end{enumerate}
+	
+	Some of the prerequisites you need to have before getting started with this method:
+	\begin{enumerate}[label=(\arabic*)]
+		\item You should be familiar with the Docker container and how it is working.
+		\item Portioner should be running which is used as a container management tool.
+		\item You should be familiarised with the YAML file of the configuration.
+	\end{enumerate}
+	
+	In this project, we are using the Method using the Docker container. If you want to start with the ESP-Home via Docker container then you need to follow these steps.
+	
+	\subsubsection{Installation of ESP-Home Via Command Line}
+	You need to follow the below step for installing the ESP-Home if you are using the method via the command line.
+	\begin{enumerate}
+		\item Open a Docker Container App
+		\item Create an image of the Portioner container management tool we used in this project. Follow this reference for more detail Source: \\{https://docs.portainer.io/start/install-ce/server/docker/linux}
+		\item Open a portainer container by typing on the browser (preferred Google Chrome). \\Command: {https://mt-labor.iem.thm.de:9443}
+		\item Create a stack using the YAML File of ESP-Home as follows and upload in the portioner. 
+		
+		\begin{verbatim}
+			services:
+			esphome:
+			image: esphome/esphome
+			container_name: esphome
+			restart: unless-stopped
+			ports:
+			- "20000:6052" # Web dashboard
+			networks:
+			- dev-net
+			volumes:
+			- team4-esphome_team4_esphome_conf:/config
+			environment:
+			USERNAME: "admin"
+			PASSWORD: "iotlab2023team4"
+			ESPHOME_DASHBOARD_USE_PING: true
+			
+			volumes:
+			team4-esphome_team4_esphome_conf:
+			
+			networks:
+			dev-net:
+		\end{verbatim}
+	\end{enumerate}
+	
+	
+	\begin{enumerate}[resume]
+		\item Open the ESP-Home dashboard by typing below in the web browser(preferred Google Chrome). \\Command: {https://mt-labor.iem.thm.de:6052}
+		\item After opening the site, you will see the below screen as a dashboard. This is the initial setup of the ESP-Home.
+	\end{enumerate}
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.6\textwidth]{"C:/Users/axitk/OneDrive/Desktop/THM Document/IOT Project/Report/Image/ESPHome dashboard"}
+		\caption{ESPHome Dashboard}
+	\end{figure}
+	
+	Please refer to the port detail in the GitLab for more details regarding the configured port.
+	
+\end{document}

@@ -1,0 +1,271 @@
+substitutions:
+  dev_name: "modbus-gw"
+  current_ip: "192.168.88.225"
+  auth_username: "admin"
+  auth_password: "iotlab2023team4"
+  ntp_server: ptbtime4.ptb.de
+  mqtt_broker: mt-labor.iem.thm.de
+  mqtt_port: "20005"
+  mqtt_auth_username: "admin"
+  mqtt_auth_password: "iotlab2023team4"
+  mb_baudrate: "19200"
+  mb_slave: "0x01"
+  update_interval: "1s"
+
+#######################
+# Basic configuration #
+#######################
+
+esphome:
+  name: $dev_name
+  friendly_name: $dev_name
+
+esp32:
+  board: esp32-gateway
+  framework:
+    type: esp-idf
+
+
+logger:
+  level: DEBUG
+
+#########################
+# Network configuration #
+#########################
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO17_OUT
+  phy_addr: 0
+  use_address: $current_ip # Use address is just for pinging the device and targeting the correct device on ota updates
+  # We don't wont any static IP configuration
+  #  manual_ip:
+  #    static_ip:
+  #    gateway:
+  #    subnet:
+  #    dns1:
+  #    dns2:
+
+# Unfortunately it's impossible to activate wifi when ethernet component is already active
+
+
+# Do not enable  Home Assistant API
+# This is crucial because if we don't connect to the api the device will reboot each 15 mins
+# https://esphome.io/components/mqtt
+# api:
+#  encryption:
+#    key: "1pAfa9Lz/bTVkpLHWxkD8MnXYdiz670ckLHJn5e6itc="
+
+# Ota passphrase
+ota:
+  password: "82c8244b10a089f5f56db37378ed616c"
+
+# Enable integrated webserver with auth
+web_server:
+  port: 80
+  auth:
+    username: $auth_username
+    password: $auth_password
+  include_internal: True
+  log: True
+  version: 2
+
+# Enable NTP
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Berlin
+    servers: $ntp_server
+
+###############################
+# Status sensor configuration #
+###############################
+text_sensor:
+  - platform: ethernet_info
+    ip_address:
+      name: "IP-Address"
+  - platform: version
+    name: "ESPHome-Version"
+
+
+######################
+# MQTT configuration #
+######################
+
+mqtt:
+  broker: $mqtt_broker
+  port: $mqtt_port
+  username: $mqtt_auth_username
+  password: $mqtt_auth_password
+  client_id: $dev_name
+  discovery: false
+  topic_prefix: "/IoT"
+  log_topic: "/system/log"
+  birth_message:
+    topic: "/system/status"
+    payload: "online"
+  will_message:
+    topic: "/system/status"
+    payload: "dying"
+  shutdown_message:
+    topic: "/system/status"
+    payload: "shutting down"
+  keepalive:
+    seconds: 5
+  on_connect:
+    then:
+      - light.turn_on: light_status
+  on_disconnect:
+    then:
+      - light.turn_off: light_status
+
+#######################
+# Board configuration #
+#######################
+
+button:
+  - platform: restart
+    id: "restart1"
+    name: "Restart gateway"
+
+light:
+  - platform: status_led
+    id: "light_status"
+    name: "status-1"
+    pin: 33
+
+binary_sensor:
+  - platform: gpio
+    pin: 34
+    name: "Restart button"
+    on_press:
+      then:
+        - button.press: "restart1"
+
+##########################
+# Hardware configuration #
+##########################
+
+uart:
+  id: modbus_ua
+  tx_pin: 4
+  rx_pin: 13 # Do not use pin 12 anymore, it's a strapping pin
+  baud_rate: $mb_baudrate
+  data_bits: 8
+  stop_bits: 1
+  parity: NONE
+
+modbus:
+  id: modbus0
+  uart_id: modbus_ua
+  send_wait_time: 250ms
+  disable_crc: False
+
+modbus_controller:
+  - id: deif_mic2
+    address: $mb_slave
+    modbus_id: modbus0
+    update_interval: $update_interval
+    command_throttle: 0ms
+
+
+##################################
+# Modbus registers configuration #
+##################################
+
+# Important note: To read multiple registers at once, there might be no gaps in addresses between sensors
+# Stick to note: https://esphome.io/components/sensor/modbus_controller#modbus-register-count for optimizing modbus communication
+
+# This is just an testing example, further registers will follow soon
+sensor:
+  - platform: modbus_controller
+    id: phasevoltage_v1
+    address: 0x3002
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+  - platform: modbus_controller
+    id: phasevoltage_v2
+    address: 0x3004
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+  - platform: modbus_controller
+    id: phasevoltage_v3
+    address: 0x3006
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    register_count: 12 # force consecutive registers (caution! distance is in dec, registers are in hex!)
+
+  - platform: modbus_controller
+    id: current_l1
+    address: 0x3012
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+  - platform: modbus_controller
+    id: current_l2
+    address: 0x3014
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+  - platform: modbus_controller
+    id: current_l3
+    address: 0x3016
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+
+
+# Full documentation on sensor filtering etc. available at https://esphome.io/components/sensor/
+# sensor:
+#   - platform: uptime
+#     name: Uptime Sensor
+#     update_interval: 180s
+#   - platform: modbus_controller
+#     modbus_controller_id: tempsensor_broad
+#     name: "DBG  --  SlaveAddr"
+#     register_type: holding
+#     address: 0x02
+#     value_type: U_WORD
+#   - platform: modbus_controller
+#     modbus_controller_id: tempsensor0
+#     id: temperature0
+#     name: "Temperature"
+#     unit_of_measurement: "°C"
+#     register_type: holding
+#     address: 0x0000
+#     value_type: U_WORD
+#     accuracy_decimals: 1
+#     filters:
+#       - multiply: 0.1
+#     on_value:
+#       then:
+#         - mqtt.publish_json:
+#             topic: /poweranalyzer/temperature
+#             payload: |-
+#               root["ts"] = id(sntp_time).now().timestamp;
+#               root["value"] = id(temperature0).state;
+
+#   - platform: modbus_controller
+#     modbus_controller_id: tempsensor0
+#     id: humidity0
+#     name: "Humidity"
+#     unit_of_measurement: "%RH"
+#     register_type: holding
+#     address: 0x0001
+#     value_type: U_WORD
+#     accuracy_decimals: 1
+#     filters:
+#       - multiply: 0.1
+#     on_value:
+#       then:
+#         - mqtt.publish_json:
+#             topic: /poweranalyzer/humidity
+#             payload: |-
+#               root["ts"] = id(sntp_time).now().timestamp;
+#               root["value"] = id(humidity0).state;
+

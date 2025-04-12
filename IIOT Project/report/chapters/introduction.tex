@@ -1,0 +1,24 @@
+\section{Introduction [MS]}
+	Power consumption analysis has playing an important role in the technological advancement world.
+	It’s being adapted by various sectors to utilize the energy consumptions and aiming to have an
+	understanding of the energy usage patterns. This report implements a methodology to visualize the
+	parameters influencing power usage, which are retrieved from the power analyzer.\\
+	
+	This report aims to analyze the power consumption patterns in the University building in real-time
+	based. Data will be collected through several modules and monitoring systems, allowing for a
+	comprehensive visualization of power consumption trends.\\
+	
+	The Power measurements data such as voltages, current, Phase angles are retrieved from the DEIF
+	MIC-2 MKII multi-instrument by using Modbus communication protocol and RS485 serial
+	communication facilities. Then the data continuously injected to the cloud platform with the help of
+	ESP32 microcontroller device. With the help of MQTT protocol, the injected data in the cloud
+	subscribed and visualized in grafana in real time basis.\\
+	
+\section{Objective of the project}
+	
+	\begin{itemize}
+		\item Retrieve the power usage information from DEIF MIC-2 MKII module
+		\item Publish the data to the cloud
+		\item Subscribe the published data
+		\item Graphical visualization of the data in grafana
+	\end{itemize}

@@ -1,0 +1,160 @@
+substitutions:
+  dev_name: "modbus-gw"
+  current_ip: "192.168.88.225"
+  auth_username: "admin"
+  auth_password: "admin"
+  ntp_server: 10.0.0.1
+  mqtt_broker: 192.168.88.241
+  mqtt_auth_username: ""
+  mqtt_auth_password: ""
+  mb_baudrate: "9600"
+  mb_slave: "0x05"
+  update_interval: "1s"
+
+
+
+esphome:
+  name: $dev_name
+  friendly_name: $dev_name
+
+esp32:
+  board: esp32-gateway
+  framework:
+    type: esp-idf
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO17_OUT
+  phy_addr: 0
+  use_address: $current_ip
+
+# Enable logging
+logger:
+  level: DEBUG
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "1pAfa9Lz/bTVkpLHWxkD8MnXYdiz670ckLHJn5e6itc="
+
+ota:
+  password: "82c8244b10a089f5f56db37378ed616c"
+
+web_server:
+  port: 80
+  auth:
+    username: $auth_username
+    password: $auth_password
+
+time:
+  - platform: sntp
+    id: sntp_time
+    servers: $ntp_server
+
+mqtt:
+  broker: $mqtt_broker
+  port: 1883
+#  username: $mqtt_auth_username
+#  password: $mqtt_auth_password
+  client_id: $dev_name
+  discovery: false
+  birth_message:
+    topic: "/poweranalyzer/status"
+    payload: "online"
+  will_message:
+    topic: "/poweranalyzer/status"
+    payload: "dying"
+  keepalive:
+    seconds: 5
+
+uart:
+  id: modbus_ua
+  tx_pin: 12
+  rx_pin: 4
+  baud_rate: $mb_baudrate
+  data_bits: 8
+  stop_bits: 1
+  parity: NONE
+
+modbus:
+  id: modbus0
+  uart_id: modbus_ua
+
+modbus_controller:
+  - id: tempsensor0
+    address: $mb_slave
+    modbus_id: modbus0
+    update_interval: $update_interval
+  - id: tempsensor_broad
+    address: 0xff
+    modbus_id: modbus0
+
+button:
+  - platform: restart
+    id: "restart1"
+    name: "Restart gateway"
+
+light:
+  - platform: status_led
+    name: "status-1"
+    pin: GPIO2
+
+binary_sensor:
+  - platform: gpio
+    pin: 34
+    name: "Restart button"
+    on_press: 
+      then:
+        - button.press: "restart1"
+
+# Full documentation on sensor filtering etc. available at https://esphome.io/components/sensor/
+sensor:
+  - platform: uptime
+    name: Uptime Sensor
+    update_interval: 180s
+  - platform: modbus_controller
+    modbus_controller_id: tempsensor_broad
+    name: "DBG  --  SlaveAddr"
+    register_type: holding
+    address: 0x02
+    value_type: U_WORD
+  - platform: modbus_controller
+    modbus_controller_id: tempsensor0
+    id: temperature0
+    name: "Temperature"
+    unit_of_measurement: "°C"
+    register_type: holding
+    address: 0x0000
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+    on_value:
+      then:
+        - mqtt.publish_json:
+            topic: /poweranalyzer/temperature
+            payload: |-
+              root["ts"] = id(sntp_time).now().timestamp;
+              root["value"] = id(temperature0).state;
+
+  - platform: modbus_controller
+    modbus_controller_id: tempsensor0
+    id: humidity0
+    name: "Humidity"
+    unit_of_measurement: "%RH"
+    register_type: holding
+    address: 0x0001
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+    on_value:
+      then:
+        - mqtt.publish_json:
+            topic: /poweranalyzer/humidity
+            payload: |-
+              root["ts"] = id(sntp_time).now().timestamp;
+              root["value"] = id(humidity0).state;
+

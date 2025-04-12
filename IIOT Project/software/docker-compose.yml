@@ -1,0 +1,106 @@
+services:
+  nodered:
+    image: nodered/node-red:latest
+    container_name: nodered
+    restart: unless-stopped
+    ports:
+      - "20001:1880" # Web dashboard
+    networks:
+      - dev-net
+    volumes:
+      - nodered-vol:/data
+
+  influxdb:
+    image: influxdb:latest
+    container_name: influxdb
+    restart: unless-stopped
+    ports:
+      - "20002:8086" # Influx v2
+    networks:
+      - dev-net
+    volumes:
+      - influxdb-vol:/var/lib/influxdb2
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "20003:3000" # Web dashboard
+    networks:
+      - dev-net
+    volumes:
+      - grafana-vol:/var/lib/grafana
+
+  emqx:
+    image: emqx:latest
+    container_name: emqx
+    restart: unless-stopped
+    ports:
+      - "20005:1883"    # MQTT
+      - "20004:18083"   # Web dashboard
+      - "20006:8883"    # SSL
+    volumes:
+      - emqx_stack_team4_mqtt_vol_data:/opt/emqx/data
+      - emqx_stack_team4_mqtt_vol_etc:/opt/emqx/etc
+      - emqx_stack_team4_mqtt_vol_log:/opt/emqx/log
+    networks:
+      - dev-net
+
+    environment:
+      EMQX_NODE_NAME: team4@mt-labor.iem.thm.de
+
+
+  esphome:
+    image: esphome/esphome
+    container_name: esphome
+    restart: unless-stopped
+    ports:
+      - "20000:6052" # Web dashboard
+    networks:
+      - dev-net
+    volumes:
+      - team4-esphome_team4_esphome_conf:/config
+    environment:
+      USERNAME: "admin"
+      PASSWORD: "iotlab2023team4"
+      ESPHOME_DASHBOARD_USE_PING: true
+
+  telegraf1:
+    image: telegraf
+    container_name: telegraf1
+    restart: unless-stopped
+    networks:
+      - dev-net
+    environment:
+      INFLUX_TOKEN: "boY1r6bdGmwU00Sou-f-VrFuh4zlQovnLbRDaqRQyZNkybBSSg9nwRAlQBL9LlLFr8qNUmdt5dLQAF6IgmouXw=="
+    command: "--config http://influxdb:8086/api/v2/telegrafs/0c4903c473f8e000"
+
+  #telegraf2:
+  #  image: telegraf
+  #  container_name: telegraf2
+  #  restart: unless-stopped
+  #  networks:
+  #    - dev-net
+  #
+  #  environment:
+  #    INFLUX_TOKEN: "Wu3se7aGSvslahEQuZF0ZeXiMZVzZ2dqgV_KxGeEPaAW_CTT1jrxYkTqdLPO-MAHeUAlq9GsKe-2gT3M0_AvlA=="
+  #  command: "--config http://influxdb:8086/api/v2/telegrafs/0c4906f38eb8e000"
+
+volumes:
+  nodered-vol:
+  influxdb-vol:
+  grafana-vol:
+
+  emqx_stack_team4_mqtt_vol_data:
+    external: true
+  emqx_stack_team4_mqtt_vol_etc:
+    external: true
+  emqx_stack_team4_mqtt_vol_log:
+    external: true
+
+  team4-esphome_team4_esphome_conf:
+    external: true
+
+networks:
+  dev-net:

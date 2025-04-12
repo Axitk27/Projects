@@ -1,0 +1,12 @@
+*.log
+*.toc
+*.aux
+*.lof
+*.lot
+*.out
+*.synctex.gz
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+IIOT-Report.pdf

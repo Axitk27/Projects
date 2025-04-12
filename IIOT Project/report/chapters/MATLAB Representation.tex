@@ -1,0 +1,71 @@
+\documentclass{article}
+\usepackage{graphicx}
+
+\begin{document}
+	
+	\section{Data Representation Via MATLAB}
+	
+	\subsection{Introduction to MATLAB}
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.2\textwidth]{"MATLAB Symbol.png"}
+		\caption{MATLAB Symbol}
+	\end{figure}
+	
+	MATLAB (an abbreviation of MATrix Laboratory) is a proprietary multi-paradigm programming language and numeric computing environment developed by MathWorks. MATLAB allows matrix manipulations, plotting of functions and data, implementation of algorithms, creation of user interfaces, and interfacing with programs written in other languages.
+	
+	Although MATLAB is intended primarily for numeric computing, an optional toolbox uses the MuPAD symbolic engine allowing access to symbolic computing abilities. An additional package, Simulink, adds graphical multi-domain simulation and model-based design for dynamic and embedded systems.
+	
+	In MATLAB, you can use the C language programming, although it supports some other programming languages like Fortran and Java. For our work, we are using the C language. For this representation of the data, we are using MATLAB 2023b version.
+	
+	\subsection{Installation of the MATLAB Software}
+	
+	You will find all the details regarding how to install MATLAB and how to start with it in the below source.
+	
+	Source: {https://www.mathworks.com/help/install/install-products.html}
+	
+	You will find at the below-mentioned location about how to add a module in MATLAB. In this project, we are using the Industrial toolbox module for MATLAB to MQTT communication.
+	
+	Source: {https://www.mathworks.com/matlabcentral/answers/101885-how-do-i-install-additional-toolboxes-into-an-existing-installation-of-matlab}
+	
+	When you go through the details and install MATLAB, you will find the below screen when you open the first time MATLAB application.
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.6\textwidth]{"Initial Screenfor the MATLAB.png"}
+		\caption{Initial Screen for MATLAB}
+	\end{figure}
+	
+	All the different parts of the MATLAB home screen are listed below.
+	\begin{enumerate}
+		\item Current Folder: It will show the current directory of the file where it is located.
+		\item Script Window: You can write your script here in this window.
+		\item Command Window: You can write your command in this window.
+		\item Workspace: This window will show the variables you have used in the script.
+	\end{enumerate}
+	
+	\subsection{Script for the Data Representation}
+	
+	You will find the script we had configured regarding the data visualization at the below-mentioned location.
+	
+	Location: {MQTT_and_Matlab.m}
+	You will find all the details regarding which part of the code is used for which application in the code itself.
+	
+	\subsection{Result of the Data Representation}
+	
+	Here I am sharing some of the screenshots of the result that we had captured.
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.6\textwidth]{"Threephase Voltage Representation in MATLAB.png"}
+		\caption{Three Phase Voltage Representation in MATLAB}
+	\end{figure}
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.6\textwidth]{"C:/Users/axitk/OneDrive/Desktop/THMDocument/IOTProject/Report/Image/Three phase Vector diagram Representation of Voltage in MATLAB.png"}
+		\caption{Three Phase Vector Diagram Representation of Voltage in MATLAB}
+	\end{figure}
+	
+\end{document}

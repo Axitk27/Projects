@@ -1,0 +1,191 @@
+\documentclass[11pt,a4paper,english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[obeyspaces,spaces,hyphens]{url}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage[left=2cm, right=2cm, top=2cm, bottom=2.00cm, bindingoffset=1.5cm, headheight=1.5cm, includeheadfoot]{geometry}
+\usepackage[style=ieee]{biblatex}
+\usepackage{xpatch}
+\usepackage[english]{babel}
+\usepackage{listings}
+\usepackage[printonlyused, withpage]{acronym}
+\usepackage[hidelinks]{hyperref}
+\usepackage{cleveref}
+\usepackage[style=german]{csquotes}
+\usepackage{siunitx}
+\usepackage[onehalfspacing]{setspace}
+\usepackage{rotating}
+\usepackage{subfig}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{threeparttablex}
+\usepackage{arydshln}
+\usepackage{caption}
+\usepackage{chngcntr}
+\usepackage{float}
+\usepackage{tabularx}
+\usepackage{pdfpages}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{rotating}
+\usepackage[toc,page]{appendix}
+\usepackage{fontspec}
+\usepackage[section, nottoc]{tocbibind}
+\usepackage[]{easyReview}
+\usepackage{varwidth}
+\usepackage{lipsum}
+\usepackage{hyphenat}
+
+% Load preamble
+\input{tex/preamble.tex}
+
+% Meta information
+\author{IIOT Group 4}
+\date{TBD} %TODO: adjust the date
+\title{Power Consumption Analysis}
+
+% Load bibliography data
+\addbibresource{sources.bib}
+
+% Begin main document
+\begin{document}
+
+% Disable page numbering
+\pagenumbering{gobble}
+
+% Produce titlepage
+\thispagestyle{titlepage}
+
+	\begin{center}
+		\vspace{1cm}
+		{\LARGE Interdisciplinary IoT Project}\\
+		\vspace{2cm}
+		{\huge\bfseries Power Consumption Analysis}\\
+		\vspace{2cm}
+		\begin{varwidth}{\linewidth}
+			\begin{tabbing}
+				Mary Sutharshini Thevathas \= TBD\kill
+				Mary Sutharshini Thevathas \> TBD\\
+				Axit Kakadiya \> TBD\\
+				Brieuc Pesne \> TBD\\
+				Devraj Solanki \> TBD\\
+				Robin Dietzel \> 5277715\\
+			\end{tabbing}
+		\end{varwidth}
+		
+		\vspace{1cm}
+		DATE: tbd\\%TODO: set date correctly
+		\vfill
+		Department of Informationstechnik, Elektrotechnik und Mechatronik (IEM)\\
+		Campus Friedberg\\
+		\vspace{1cm}
+		Specialization: None/interdisciplinary
+	\end{center}
+
+	\vspace{3cm}
+	
+	\begin{tabularx}{\linewidth}{ll}
+		Supervisor: & Prof. Dr.-Ing. Fabian Mink
+	\end{tabularx}
+	
+	%\newpage	
+	\pagestyle{plain}
+	
+	\newpage
+	\section*{Statement of authorship}
+		I hereby declare that I have written this report independently and exclusively using the sources and aids provided.	Contents of this thesis that were taken verbatim or analogously from other sources are marked as such. The report or parts thereof have not been submitted in this or a comparable form to any other examination body and have not been published.\\
+	
+	\vfill
+	\noindent \makebox[7cm][c]{{\Large \color{blue} Büdingen, den 07.06.2023}} \hfill \makebox[7cm][c]{\includegraphics[width=5cm]{assets/signatures/robin_dietzel}}\par
+	\noindent\rule{7cm}{.4pt}\hfill\rule{7cm}{.4pt}\par
+	\noindent Place, Date\hfill Signature\par
+	\vspace{0.5cm}
+	\noindent \makebox[7cm][c]{{\Large \color{blue} Büdingen, den 07.06.2023}} \hfill \makebox[7cm][c]{\includegraphics[width=5cm]{assets/signatures/robin_dietzel}}\par
+	\noindent\rule{7cm}{.4pt}\hfill\rule{7cm}{.4pt}\par
+	\noindent Place, Date\hfill Signature\par
+	\vspace{0.5cm}
+	\noindent \makebox[7cm][c]{{\Large \color{blue} Büdingen, den 07.06.2023}} \hfill \makebox[7cm][c]{\includegraphics[width=5cm]{assets/signatures/robin_dietzel}}\par
+	\noindent\rule{7cm}{.4pt}\hfill\rule{7cm}{.4pt}\par
+	\noindent Place, Date\hfill Signature\par
+	\vspace{0.5cm}
+	\noindent \makebox[7cm][c]{{\Large \color{blue} Büdingen, den 07.06.2023}} \hfill \makebox[7cm][c]{\includegraphics[width=5cm]{assets/signatures/robin_dietzel}}\par
+	\noindent\rule{7cm}{.4pt}\hfill\rule{7cm}{.4pt}\par
+	\noindent Place, Date\hfill Signature\par
+	\vspace{0.5cm}
+	\noindent \makebox[7cm][c]{{\Large \color{blue} Büdingen, den 07.06.2023}} \hfill \makebox[7cm][c]{\includegraphics[width=5cm]{assets/signatures/robin_dietzel}}\par
+	\noindent\rule{7cm}{.4pt}\hfill\rule{7cm}{.4pt}\par
+	\noindent Place, Date\hfill Signature\par
+	\newpage
+	
+	% Enable roman page numbering
+	\pagenumbering{Roman}
+
+	% tocs
+	\newpage
+	\tableofcontents
+	
+	\newpage
+	\listoffigures
+	
+	\newpage
+	\listoftables
+	
+	% table of acronyms
+	\newpage
+	\section*{Table of acronyms}
+	\input{tex/acronyms.tex}
+	
+	\newpage
+	
+	% Set headers page style with page number in footer as well
+	\fancypagestyle{headings}{%
+		\cfoot{\thepage}
+	}
+	\pagestyle{thesishead}
+	
+	\pagenumbering{arabic}
+	
+	
+	\newpage
+	\include{chapters/introduction.tex}
+
+	\newpage
+	\include{chapters/basics.tex}
+	
+	\newpage
+	\section{Main-part} %TODO: rename properly
+	\include{chapters/hardware.tex}
+	\include{chapters/software.tex}
+	\include{chapters/software-server-side.tex}
+
+	\newpage
+	\include{chapters/conclusion.tex}
+
+	% Workaround to break urls in bibliography
+	\setcounter{biburllcpenalty}{7000}
+	\setcounter{biburlucpenalty}{8000}
+	\newpage
+	\printbibliography [heading=bibintoc]
+	
+	% Build appendix
+	\pagestyle{plain}
+	\newpage
+	\begin{appendices}
+		%\includepdf[
+		%	pages=1,
+		%	frame=true,
+		%	scale=0.8,
+		%	pagecommand={
+		%		\phantomsection
+		%		\addcontentsline{toc}{subsection}{Legende Logikbausteine}
+		%		\label{appendix:logiccomponents}
+		%	}
+		%]
+		%{appendix/legend.pdf}
+	\end{appendices}
+	
+\end{document}

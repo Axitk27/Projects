@@ -1,0 +1,16 @@
+The development of a custom command protocol for controlling the Mecanum wheeled car was essential to ensure smooth and efficient communication between the user and the vehicle. The design is inspired by the \ac{sdk} of the Ryze Tello Drone, which provided a useful framework for structuring commands in a clear and scalable manner~\cite{ryze.2018}. In this system, the Mecanum car operates as a WiFi access point, with a fixed IP address of 192.168.10.1. Devices connecting to the car, such as smartphones or laptops, can communicate through \ac{udp} protocol on specific ports. Commands are sent to UDP port 4444, and status reports are received on UDP port 4445.\\
+The command protocol allows for three core commands to be sent to the Mecanum car. These commands, described in the command list, include:
+\begin{itemize}
+	\item \textbf{rc x y z}: The primary control command that applies speed values to the car's motion. x, y and z are 8-bit signed integer values that correspond to the user input that is translated to the wheels.
+	\item \textbf{keepalive}: This command maintains the connection between the client device and the car without issuing any new control instructions. It prevents the system from timing out and maintains the current state of motion until new instructions are given.
+	\item \textbf{stop}: This command halts all movement, immediately setting the speeds on all axes to zero, ensuring the car stops regardless of its previous state.
+\end{itemize}
+Each of these commands is transmitted as a simple string over UDP to ensure minimal latency in communication, and responses such as "ok" or "error" are returned depending on the validity and execution of the command.\\
+In addition to receiving commands, the Mecanum car provides real-time feedback via status reports. These reports are sent every second through \ac{udp} port 4445 to the last client device that issued a command. The report is transmitted as a string containing various key data points about the car's current state. This includes:
+\begin{itemize}
+	\item \textbf{Battery Voltage} (batV): The voltage level of the car’s battery, reported to two decimal places.
+	\item \textbf{Battery Percentage (batP)}: The remaining charge of the battery, expressed as a percentage.
+	\item \textbf{Motor Duty Cycles} (mA, mB, mC, mD): The current \ac{pwm} duty cycles for each of the four motors (A, B, C, D), expressed in percentage values.
+\end{itemize}
+This status feedback is critical for maintaining control, as it allows the user to monitor battery levels and motor activity in real time, ensuring effective command execution and enabling adaptive decision-making during vehicle operation.\\
+To implement the command protocol, the Mecanum car requires a \ac{udp} client to be set up on the controlling device. The client sends commands to the car and listens for responses on the designated ports. The fixed IP address simplifies the connection process, while the compact command set ensures a minimal overhead for data transmission, making the system both lightweight and responsive. With the foundation of this protocol, the car can be efficiently controlled in real-time, whether for basic movement or more complex, synchronized operations. The whole documentation of Mecanum Car Commands in the style of the Ryze Tello Drone \ac{sdk} can be accessed in the appendix.

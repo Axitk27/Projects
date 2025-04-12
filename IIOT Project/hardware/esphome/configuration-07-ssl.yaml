@@ -1,0 +1,703 @@
+substitutions:
+  dev_name: "modbus-gw"
+  current_ip: "172.17.218.138"
+  auth_username: "admin"
+  auth_password: "iotlab2023team4"
+  ntp_server: "ptbtime4.ptb.de"
+  mqtt_broker: "mt-labor.iem.thm.de"
+  mqtt_port: "20006"
+  mqtt_auth_username: "admin"
+  mqtt_auth_password: "iotlab2023team4"
+  mb_baudrate: "19200"
+  mb_slave: "0x01"
+  update_interval: "1s"
+  cfg_decimal_accuracy: "6"
+  cfg_current_multiplicator: "20"
+  cfg_angle_multiplicator: "0.1"
+
+#######################
+# Basic configuration #
+#######################
+
+esphome:
+  name: $dev_name
+  friendly_name: $dev_name
+
+esp32:
+  board: esp32-gateway
+  framework:
+    type: esp-idf
+
+
+logger:
+  level: ERROR
+  baud_rate: 0
+
+#########################
+# Network configuration #
+#########################
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO17_OUT
+  phy_addr: 0
+  use_address: $current_ip # Use address is just for pinging the device and targeting the correct device on ota updates
+  # We don't wont any static IP configuration
+  #  manual_ip:
+  #    static_ip:
+  #    gateway:
+  #    subnet:
+  #    dns1:
+  #    dns2:
+
+# Unfortunately it's impossible to activate wifi when ethernet component is already active
+
+
+# Do not enable  Home Assistant API
+# This is crucial because if we don't connect to the api the device will reboot each 15 mins
+# https://esphome.io/components/mqtt
+# api:
+#  encryption:
+#    key: "1pAfa9Lz/bTVkpLHWxkD8MnXYdiz670ckLHJn5e6itc="
+
+# Ota passphrase
+ota:
+  password: "82c8244b10a089f5f56db37378ed616c"
+
+# Enable integrated webserver with auth
+web_server:
+  port: 80
+  auth:
+    username: $auth_username
+    password: $auth_password
+  include_internal: True
+  log: True
+  version: 2
+
+# Enable NTP
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Berlin
+    servers: $ntp_server
+
+###############################
+# Status sensor configuration #
+###############################
+text_sensor:
+  - platform: ethernet_info
+    ip_address:
+      name: "IP-Address"
+  - platform: version
+    name: "ESPHome-Version"
+
+
+######################
+# MQTT configuration #
+######################
+
+mqtt:
+  broker: $mqtt_broker
+  port: $mqtt_port
+  username: $mqtt_auth_username
+  password: $mqtt_auth_password
+  client_id: $dev_name
+  discovery: false
+  topic_prefix: "/IoT"
+  log_topic: "/system/log"
+  birth_message:
+    topic: "/system/status"
+    payload: "online"
+  will_message:
+    topic: "/system/status"
+    payload: "dying"
+  shutdown_message:
+    topic: "/system/status"
+    payload: "shutting down"
+  keepalive:
+    seconds: 5
+  on_connect:
+    then:
+      - light.turn_on: light_status
+  on_disconnect:
+    then:
+      - light.turn_off: light_status
+  skip_cert_cn_check: False
+  idf_send_async: False
+  certificate_authority: |
+    -----BEGIN CERTIFICATE-----
+    MIIECzCCAvOgAwIBAgIUOxl0bJvV+FsPJ4GmBDlvNYVdAZMwDQYJKoZIhvcNAQEL
+    BQAwgZQxCzAJBgNVBAYTAkRFMQ4wDAYDVQQIDAVIZXNzZTESMBAGA1UEBwwJRnJp
+    ZWRiZXJnMQwwCgYDVQQKDANUSE0xDDAKBgNVBAsMA0lFTTEcMBoGA1UEAwwTbXQt
+    bGFib3IuaWVtLnRobS5kZTEnMCUGCSqGSIb3DQEJARYYcm9iaW4uZGlldHplbEBp
+    ZW0udGhtLmRlMB4XDTIzMTIxNTEyNTUyNVoXDTMzMTIxMjEyNTUyNVowgZQxCzAJ
+    BgNVBAYTAkRFMQ4wDAYDVQQIDAVIZXNzZTESMBAGA1UEBwwJRnJpZWRiZXJnMQww
+    CgYDVQQKDANUSE0xDDAKBgNVBAsMA0lFTTEcMBoGA1UEAwwTbXQtbGFib3IuaWVt
+    LnRobS5kZTEnMCUGCSqGSIb3DQEJARYYcm9iaW4uZGlldHplbEBpZW0udGhtLmRl
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1wAKYroisy55u26YQOys
+    QxK/Qx8uGByX1JJ1vJp0pcxv/GE9QDsnnIyVYLa4ZNxy8h0mngQ78TryrrJXSu/Z
+    xDPwHjmK4g7K09osxf1vB41r05EtD1JbCYvr0pGqAZ9dlkOzffhRdn3QRDoQYK2r
+    udK4CQjuoCatS9pu0kLYp3JNvQeC5W8hUdGDvjaTa9NHU45EoWjsaPZ21XSsoahf
+    G6AubB/DG8dheQ61vkzpS1gc2nhKynMu1Bw3+dKq5h49Cs9zLVG836YbppNsp26g
+    oc+70w3+dlRbVE6z3NRJuE1aZOg1R1HfL7SdB2cTjOcTWXqyH4hwivqEnw77pVTC
+    qwIDAQABo1MwUTAdBgNVHQ4EFgQURpaQYFkMDnemHkF4VE4Nh7f5vkUwHwYDVR0j
+    BBgwFoAURpaQYFkMDnemHkF4VE4Nh7f5vkUwDwYDVR0TAQH/BAUwAwEB/zANBgkq
+    hkiG9w0BAQsFAAOCAQEAiFnP9aCsO6akL3+CM7WDjdtFAWOsJ9HoNZAnR/5nZZ2I
+    Zn7SnrUTu4dVJ8+h/0G2fbZUqBslonv/tw9eUE8eeGwaZPiq6wxWWz4IKMOsXj6Z
+    YB6EBnRuhuanrmS6al80yj3uJY3DjW5jyVqSqogDgSkOcckJ07uZiLaE+oiu+WTN
+    sdY5aNTDOj6ZTzIEiKm1fl+YfxCPIQOjwZJPOhW3G60HuaBn1x9+ho0nxMaFpqZI
+    8F9jAyiqhMcai5OKhRu2I9JhuHOLDOIj73/cf05KKDuqD/cDeUFtSBBIFzz7A+lx
+    enNCZaFpvGO+sO2yA1HVR1x6VynIzyaYLSE02WwHBg==
+    -----END CERTIFICATE-----
+
+
+#######################
+# Board configuration #
+#######################
+
+button:
+  - platform: restart
+    id: "restart1"
+    name: "Restart gateway"
+
+light:
+  - platform: status_led
+    id: "light_status"
+    name: "status-1"
+    pin: 33
+
+binary_sensor:
+  - platform: gpio
+    pin: 34
+    name: "Restart button"
+    on_press:
+      then:
+        - button.press: "restart1"
+
+##########################
+# Hardware configuration #
+##########################
+
+uart:
+  id: modbus_ua
+  tx_pin: 4
+  rx_pin: 13 # Do not use pin 12 anymore, it's a strapping pin
+  baud_rate: $mb_baudrate
+  data_bits: 8
+  stop_bits: 1
+  parity: NONE
+
+modbus:
+  id: modbus0
+  uart_id: modbus_ua
+  send_wait_time: 250ms
+  disable_crc: False
+
+modbus_controller:
+  - id: deif_mic2
+    address: $mb_slave
+    modbus_id: modbus0
+    update_interval: $update_interval
+    command_throttle: 0ms
+
+
+##################################
+# Modbus registers configuration #
+##################################
+
+# Important note: To read multiple registers at once, there might be no gaps in addresses between sensors
+# Stick to note: https://esphome.io/components/sensor/modbus_controller#modbus-register-count for optimizing modbus communication
+# There are lines commended with #pad -> These config lines are used to read the modbus in one single transaction and fill the gaps betweeen registers
+#
+# This is just an testing example, further registers will follow soon
+# We also set state_topic to null to prevent automated topic generation and state publishing: https://esphome.io/components/mqtt#config-mqtt-component
+sensor:
+  - platform: internal_temperature
+    id: int_temp
+    name: Internal temperature
+    unit_of_measurement: "°C"
+  - platform: modbus_controller
+    id: frequency
+    name: "Frequency"
+    address: 0x3000
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "Hz"
+    state_topic:
+  - platform: modbus_controller
+    state_topic:  
+    id: phasevoltage_v1
+    name: "Phase voltage V1"
+    address: 0x3002
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "V"
+  - platform: modbus_controller
+    state_topic:
+    id: phasevoltage_v2
+    name: "Phase voltage V2"
+    address: 0x3004
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "V"
+  - platform: modbus_controller
+    state_topic:
+    id: phasevoltage_v3
+    name: "Phase voltage V3"
+    address: 0x3006
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "V"
+  - platform: modbus_controller
+    state_topic:
+    id: phasevoltage_avg
+    name: "Average phase voltage"
+    address: 0x3008
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "V"
+  - platform: modbus_controller
+    state_topic:  
+    id: linevoltage_v12
+    name: "Line voltage V12"
+    address: 0x300A
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "V"
+  - platform: modbus_controller
+    state_topic:  
+    id: linevoltage_v23
+    name: "Linevoltage V23"
+    address: 0x300C
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "V"
+  - platform: modbus_controller
+    state_topic:  
+    id: linevoltage_v31
+    name: "Line voltage V31"
+    address: 0x300E
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "V"
+  - platform: modbus_controller
+    state_topic:  
+    id: linevoltage_avg
+    name: "Average line voltage"
+    address: 0x3010
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "V"
+  - platform: modbus_controller
+    state_topic:  
+    id: current_l1
+    name: "Current L1"
+    address: 0x3012
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "A"
+    filters:
+      - multiply: $cfg_current_multiplicator
+  - platform: modbus_controller
+    state_topic:  
+    id: current_l2
+    name: "Current L2"
+    address: 0x3014
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "A"
+    filters:
+      - multiply: $cfg_current_multiplicator
+  - platform: modbus_controller
+    state_topic:  
+    id: current_l3
+    name: "Current L3"
+    address: 0x3016
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "A"
+    filters:
+      - multiply: $cfg_current_multiplicator
+  - platform: modbus_controller
+    state_topic:  
+    id: current_avg
+    name: "Average current"
+    address: 0x3018
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "A"
+    filters:
+      - multiply: $cfg_current_multiplicator
+  - platform: modbus_controller
+    state_topic:  
+    id: current_n
+    name: "Current N"
+    address: 0x301A
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "A"
+    filters:
+      - multiply: $cfg_current_multiplicator
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepower_a
+    name: "Phase power A"
+    address: 0x301C
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "W"
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepower_b
+    name: "Phase power B"
+    address: 0x301E
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "W"
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepower_c
+    name: "Phase power C"
+    address: 0x3020
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "W"
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepower_sum
+    name: "System power"
+    address: 0x3022
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "A"
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepower_qa
+    name: "Phase reactive power QA"
+    address: 0x3024
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "var"
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepower_qb
+    name: "Phase reactive power QB"
+    address: 0x3026
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "var"
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepower_qc
+    name: "Phase reactive power QC"
+    address: 0x3028
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "var"
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepower_qsum
+    name: "System reactive power"
+    address: 0x302A
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "var"
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepower_sa
+    name: "Phase apparent power SA"
+    address: 0x302C
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "VA"
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepower_sb
+    name: "Phase apparent power SB"
+    address: 0x302E
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "VA"
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepower_sc
+    name: "Phase apparent power SC"
+    address: 0x3030
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "VA"
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepower_ssum
+    name: "System apparent power"
+    address: 0x3032
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "VA"
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepf_a
+    name: "Phase A power factor"
+    address: 0x3034
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepf_b
+    name: "Phase B power factor"
+    address: 0x3036
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepf_c
+    name: "Phase C power factor"
+    address: 0x3038
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+  - platform: modbus_controller
+    state_topic:  
+    id: phasepf_sum
+    name: "System power factor"
+    address: 0x303A
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: $cfg_decimal_accuracy
+    #register_count: 4732 #pad
+    #Could not do padding here because this might be too many registers!
+
+  - platform: modbus_controller
+    state_topic:  
+    id: angle_v2v1
+    name: "Phase angle V2 -> V1"
+    address: 0x42A0
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: U_WORD
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "°"
+    filters:
+      - multiply: $cfg_angle_multiplicator
+  - platform: modbus_controller
+    state_topic:  
+    id: angle_v3v1
+    name: "Phase angle V3 -> V1"
+    address: 0x42A1
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: U_WORD
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "°"
+    filters:
+      - multiply: $cfg_angle_multiplicator
+  - platform: modbus_controller
+    state_topic:  
+    id: angle_l1v1
+    name: "Phase angle L1 -> V1"
+    address: 0x42A2
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: U_WORD
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "°"
+    filters:
+      - multiply: $cfg_angle_multiplicator
+  - platform: modbus_controller
+    state_topic:  
+    id: angle_l2v1
+    name: "Phase angle L2 -> V1"
+    address: 0x42A3
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: U_WORD
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "°"
+    filters:
+      - multiply: $cfg_angle_multiplicator
+  - platform: modbus_controller
+    state_topic:  
+    id: angle_l3v1
+    name: "Phase angle L3 -> V1"
+    address: 0x42A4
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: U_WORD
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "°"
+    filters:
+      - multiply: $cfg_angle_multiplicator
+
+  - platform: modbus_controller
+    state_topic: 
+    id: energy_total
+    name: "Energy total"
+    address: 0x4050
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: U_DWORD
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "kWh"
+  - platform: modbus_controller
+    state_topic: 
+    id: energy_net
+    name: "Energy net"
+    address: 0x4052
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: U_DWORD
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "kWh"
+  - platform: modbus_controller
+    state_topic: 
+    id: reactive_energy_total
+    name: "Reactive energy total"
+    address: 0x4054
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: U_DWORD
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "kWh"
+  - platform: modbus_controller
+    state_topic: 
+    id: reactive_energy_net
+    name: "Reactive energy net"
+    address: 0x4056
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: U_DWORD
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "kWh"
+  - platform: modbus_controller
+    state_topic: 
+    id: apparent_energy
+    name: "Apparent energy"
+    address: 0x4058
+    modbus_controller_id: deif_mic2
+    register_type: holding
+    value_type: U_DWORD
+    accuracy_decimals: $cfg_decimal_accuracy
+    unit_of_measurement: "kWh"
+
+
+#################
+# MQTT Scripts  #
+#################
+
+script:
+  - id: publish_to_broker
+    then:
+      - mqtt.publish_json: 
+          topic: "/IoT/combined"
+          payload: |-
+            root["_ts"] = id(sntp_time).now().timestamp;
+            root["frequency"] = id(frequency).state;
+            root["phasevoltage_v1"] = id(phasevoltage_v1).state;
+            root["phasevoltage_v2"] = id(phasevoltage_v2).state;
+            root["phasevoltage_v3"] = id(phasevoltage_v3).state;
+            root["phasevoltage_avg"] = id(phasevoltage_avg).state;
+            root["linevoltage_v12"] = id(linevoltage_v12).state;
+            root["linevoltage_v23"] = id(linevoltage_v23).state;
+            root["linevoltage_v31"] = id(linevoltage_v31).state;
+            root["linevoltage_avg"] = id(linevoltage_avg).state;
+            root["current_l1"] = id(current_l1).state;
+            root["current_l2"] = id(current_l2).state;
+            root["current_l3"] = id(current_l3).state;
+            root["current_avg"] = id(current_avg).state;
+            root["current_n"] = id(current_n).state;
+            root["phasepower_a"] = id(phasepower_a).state;
+            root["phasepower_b"] = id(phasepower_b).state;
+            root["phasepower_c"] = id(phasepower_c).state;
+            root["phasepower_sum"] = id(phasepower_sum).state;
+            root["phasepower_qa"] = id(phasepower_qa).state;
+            root["phasepower_qb"] = id(phasepower_qb).state;
+            root["phasepower_qc"] = id(phasepower_qc).state;
+            root["phasepower_qsum"] = id(phasepower_qsum).state;
+            root["phasepower_sa"] = id(phasepower_sa).state;
+            root["phasepower_sb"] = id(phasepower_sb).state;
+            root["phasepower_sc"] = id(phasepower_sc).state;
+            root["phasepower_ssum"] = id(phasepower_ssum).state;
+            root["phasepf_a"] = id(phasepf_a).state;
+            root["phasepf_b"] = id(phasepf_b).state;
+            root["phasepf_c"] = id(phasepf_c).state;
+            root["phasepf_sum"] = id(phasepf_sum).state;
+            root["angle_v2v1"] = id(angle_v2v1).state;
+            root["angle_v3v1"] = id(angle_v3v1).state;
+            root["angle_l1v1"] = id(angle_l1v1).state;
+            root["angle_l2v1"] = id(angle_l2v1).state;
+            root["angle_l3v1"] = id(angle_l3v1).state;
+            root["energy_total"] = id(energy_total).state;
+            root["energy_net"] = id(energy_net).state;
+            root["reactive_energy_total"] = id(reactive_energy_total).state;
+            root["reactive_energy_net"] = id(reactive_energy_net).state;
+            root["apparent_energy"] = id(apparent_energy).state;
+
+
+##############################
+# Interval for update script #
+##############################
+
+interval:
+  - interval: $update_interval
+    then:
+     - script.execute: publish_to_broker
